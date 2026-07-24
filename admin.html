@@ -17,8 +17,14 @@
   <h1>Dinner Specials Admin</h1>
   
   <div id="pin-screen">
-    <input type="password" id="pin" placeholder="Enter Admin PIN" />
+    <input type="password" id="pin" placeholder="Enter Admin PIN (default: 1234)" />
     <button onclick="checkPin()">Unlock</button>
+  </div>
+
+  <div id="token-screen" class="hidden">
+    <input type="password" id="token" placeholder="Paste your GitHub Token (ghp_...)" />
+    <button onclick="saveTokenAndShowForm()">Continue</button>
+    <div id="token-status" style="color:red;"></div>
   </div>
 
   <div id="admin-form" class="hidden">
@@ -31,22 +37,31 @@
   </div>
 
   <script>
-    // === CONFIGURATION ===
-    const SECRET_PIN_HASH = "2ca0033"; //
+    const SECRET_PIN_HASH = "2ca0033"; // 
     const REPO = "tsyruk/restaurant-specials";
     const BRANCH = "main";
-    const GITHUB_TOKEN = "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"; // ← REPLACE WITH YOUR TOKEN
     const IMAGE_FOLDER = "images/specials/";
-    // =====================
+
+    let GITHUB_TOKEN = "";
 
     function checkPin() {
       const inputPin = document.getElementById("pin").value;
       if (simpleHash(inputPin) === SECRET_PIN_HASH) {
         document.getElementById("pin-screen").classList.add("hidden");
-        document.getElementById("admin-form").classList.remove("hidden");
+        document.getElementById("token-screen").classList.remove("hidden");
       } else {
         alert("Incorrect PIN");
       }
+    }
+
+    function saveTokenAndShowForm() {
+      GITHUB_TOKEN = document.getElementById("token").value.trim();
+      if (!GITHUB_TOKEN.startsWith("ghp_")) {
+        document.getElementById("token-status").textContent = "Token must start with ghp_";
+        return;
+      }
+      document.getElementById("token-screen").classList.add("hidden");
+      document.getElementById("admin-form").classList.remove("hidden");
     }
 
     function simpleHash(str) {
@@ -59,6 +74,7 @@
       return Math.abs(hash).toString(16);
     }
 
+    // ... rest of the functions (submitSpecial, fileToBase64, updateGitHubFile) same as before
     async function submitSpecial() {
       const status = document.getElementById("status");
       status.textContent = "Uploading to GitHub...";
@@ -84,9 +100,7 @@
         await updateGitHubFile(imagePath, imageBase64, `Add special image: ${title}`);
 
         const newSpecial = {
-          title,
-          price,
-          description,
+          title, price, description,
           image: `/${imagePath}`,
           date: new Date().toISOString().split('T')[0]
         };
@@ -133,7 +147,7 @@
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || response.statusText);
       }
     }
