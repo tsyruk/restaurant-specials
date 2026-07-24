@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Today's Special</title>
+<style>
+  html, body { margin:0; height:100%; background:#000; overflow:hidden; font-family: system-ui, -apple-system, sans-serif; touch-action:none; }
+
+  .stage { position:fixed; inset:0; background:#000; }
+  .stage img { width:100%; height:100%; object-fit:cover; display:block; }
+  @media (min-width: 700px) { .stage img { object-fit:contain; } }
+
+  .hint {
+    position:fixed; bottom:14px; left:50%; transform:translateX(-50%);
+    color:white; font-size:14px; background:rgba(0,0,0,.45);
+    padding:6px 10px; border-radius:999px; opacity:.75; z-index:5; pointer-events:none;
+  }
+
+  /* description panel, slides in from the left when you swipe left-to-right */
+  .panel {
+    position:fixed; top:0; left:0; height:100%; width:min(360px, 85vw);
+    background:#111; color:#fff; z-index:10;
+    transform:translateX(-100%); transition:transform .3s ease;
+    box-shadow:8px 0 24px rgba(0,0,0,.5);
+    display:flex; flex-direction:column;
+    padding:28px 24px; box-sizing:border-box;
+  }
+  .panel.open { transform:translateX(0); }
+  .panel h2 { margin:0 0 6px; font-size:24px; }
+  .panel .price { margin:0 0 18px; font-size:17px; color:#f2b134; font-weight:600; }
+  .panel .desc { margin:0; font-size:16px; line-height:1.55; color:#ddd; }
+
+  .scrim {
+    position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:9;
+    opacity:0; pointer-events:none; transition:opacity .3s ease;
+  }
+  .scrim.open { opacity:1; pointer-events:auto; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <img src="special4.jpg" alt="Pan Seared Black Cod">
+</div>
+
+<div class="hint">Swipe left to right for details</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" aria-hidden="true" aria-label="Dish details">
+  <h2>Pan Seared Black Cod</h2>
+  <p class="price">$38</p>
+  <p class="desc">Red Wine Beurre Rouge, Charred Asparagus, Roasted Wild Mushrooms, Crispy Fingerling Potatoes, Pickled Scallions, Pea Greens</p>
+</aside>
+
+<script>
+  const panel = document.getElementById('panel');
+  const scrim = document.getElementById('scrim');
+
+  let startX = 0, startY = 0, tracking = false;
+  const THRESHOLD = 60; // pixels of horizontal drag needed to trigger
+
+  function openPanel() {
+    panel.classList.add('open');
+    scrim.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+  }
+  function closePanel() {
+    panel.classList.remove('open');
+    scrim.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+  }
+
+  document.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!tracking) return;
+    tracking = false;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const dx = endX - startX;
+    const dy = endY - startY;
+
+    // ignore mostly-vertical drags
+    if (Math.abs(dy) > Math.abs(dx)) return;
+
+    if (dx > THRESHOLD) openPanel();          // swiped left -> right
+    else if (dx < -THRESHOLD) closePanel();   // swiped right -> left
+  }, { passive: true });
+
+  // tap the scrim to close too
+  scrim.addEventListener('click', closePanel);
+
+  setTimeout(() => document.querySelector('.hint')?.remove(), 4000);
+</script>
+
+</body>
+</html>
