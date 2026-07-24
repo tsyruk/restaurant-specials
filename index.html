@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Today's Specials</title>
+<style>
+  html, body { margin:0; height:100%; background:#000; overflow:hidden; font-family: system-ui, -apple-system, sans-serif; }
+
+  .viewer { height:100vh; width:100vw; display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; }
+  .slide { flex:0 0 100vw; height:100vh; scroll-snap-align:start; display:flex; align-items:center; justify-content:center; background:#000; position:relative; }
+  .slide img { width:100vw; height:100vh; object-fit:cover; display:block; }
+  @media (min-width: 700px) { .slide img { object-fit:contain; } }
+
+  .hint { position:fixed; bottom:14px; left:50%; transform:translateX(-50%); color:white; font-size:14px; background:rgba(0,0,0,.45); padding:6px 10px; border-radius:999px; opacity:.75; z-index:5; pointer-events:none; }
+
+  /* dot indicators so people can see how many specials there are and where they are */
+  .dots { position:fixed; top:14px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:5; }
+  .dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.4); transition:background .2s; }
+  .dot.active { background:#fff; }
+
+  /* info button on each slide, opens the description panel */
+  .info-btn {
+    position:absolute; right:16px; bottom:24px; z-index:4;
+    width:44px; height:44px; border-radius:50%; border:none;
+    background:rgba(0,0,0,.5); color:#fff; font-size:18px; font-weight:600;
+    font-style:italic; font-family:Georgia, serif; line-height:44px; text-align:center;
+    backdrop-filter:blur(4px); cursor:pointer;
+  }
+  .info-btn:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+
+  /* slide-in side panel */
+  .panel {
+    position:fixed; top:0; right:0; height:100%; width:min(340px, 85vw);
+    background:#111; color:#fff; z-index:10;
+    transform:translateX(100%); transition:transform .3s ease;
+    box-shadow:-8px 0 24px rgba(0,0,0,.5);
+    display:flex; flex-direction:column;
+    padding:24px 22px; box-sizing:border-box;
+  }
+  .panel.open { transform:translateX(0); }
+  .panel-close {
+    align-self:flex-end; width:36px; height:36px; border-radius:50%;
+    background:rgba(255,255,255,.08); border:none; color:#fff; font-size:18px; cursor:pointer;
+  }
+  .panel-close:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+  .panel h2 { margin:20px 0 4px; font-size:22px; }
+  .panel .price { margin:0 0 16px; font-size:16px; color:#f2b134; font-weight:600; }
+  .panel .desc { margin:0; font-size:15px; line-height:1.5; color:#ddd; }
+
+  .scrim {
+    position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:9;
+    opacity:0; pointer-events:none; transition:opacity .3s ease;
+  }
+  .scrim.open { opacity:1; pointer-events:auto; }
+</style>
+</head>
+<body>
+
+<main class="viewer" aria-label="Today's food specials photo viewer">
+
+  <!-- Each slide carries its own dish info via data attributes.
+       Fill these in per dish; the info button reads them automatically. -->
+  <section class="slide"
+    data-name="Special #4"
+    data-price=""
+    data-desc="Add a description of this dish here.">
+    <img src="special4.jpg" alt="Food special 4">
+    <button class="info-btn" aria-label="Show dish details" aria-haspopup="true">i</button>
+  </section>
+
+  <!-- Add more specials like this:
+  <section class="slide" data-name="Grilled Salmon" data-price="$24" data-desc="Atlantic salmon, lemon-butter sauce, seasonal veg.">
+    <img src="special2.jpg" alt="Food special 2">
+    <button class="info-btn" aria-label="Show dish details" aria-haspopup="true">i</button>
+  </section>
+  <section class="slide" data-name="Wild Mushroom Risotto" data-price="$19" data-desc="Arborio rice, mixed wild mushrooms, parmesan, truffle oil.">
+    <img src="special3.jpg" alt="Food special 3">
+    <button class="info-btn" aria-label="Show dish details" aria-haspopup="true">i</button>
+  </section>
+  -->
+
+</main>
+
+<div class="dots" id="dots" aria-hidden="true"></div>
+<div class="hint">Swipe for more specials · tap i for details</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" aria-hidden="true" aria-label="Dish details">
+  <button class="panel-close" id="panelClose" aria-label="Close details">×</button>
+  <h2 id="panelName"></h2>
+  <p class="price" id="panelPrice"></p>
+  <p class="desc" id="panelDesc"></p>
+</aside>
+
+<script>
+  const viewer = document.querySelector('.viewer');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const panel = document.getElementById('panel');
+  const scrim = document.getElementById('scrim');
+  const dotsWrap = document.getElementById('dots');
+
+  // build dot indicators
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function updateDots() {
+    const i = Math.round(viewer.scrollLeft / window.innerWidth);
+    dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+  }
+  viewer.addEventListener('scroll', () => requestAnimationFrame(updateDots), { passive: true });
+
+  // open/close the description panel
+  function openPanel(slide) {
+    document.getElementById('panelName').textContent = slide.dataset.name || '';
+    document.getElementById('panelPrice').textContent = slide.dataset.price || '';
+    document.getElementById('panelDesc').textContent = slide.dataset.desc || '';
+    panel.classList.add('open');
+    scrim.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    document.getElementById('panelClose').focus();
+  }
+  function closePanel() {
+    panel.classList.remove('open');
+    scrim.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+  }
+
+  slides.forEach(slide => {
+    slide.querySelector('.info-btn').addEventListener('click', () => openPanel(slide));
+  });
+  scrim.addEventListener('click', closePanel);
+  document.getElementById('panelClose').addEventListener('click', closePanel);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closePanel();
+    if (e.key === 'ArrowRight') viewer.scrollBy({ left: window.innerWidth, behavior: 'smooth' });
+    if (e.key === 'ArrowLeft') viewer.scrollBy({ left: -window.innerWidth, behavior: 'smooth' });
+  });
+
+  setTimeout(() => document.querySelector('.hint')?.remove(), 4000);
+</script>
+
+</body>
+</html>
