@@ -6,17 +6,13 @@
 <title>Today's Special</title>
 <style>
   html, body { margin:0; height:100%; background:#000; overflow:hidden; font-family: system-ui, -apple-system, sans-serif; }
-
   .stage { position:fixed; inset:0; background:#000; border:none; padding:0; cursor:pointer; }
   .stage img { width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
-
   .hint {
     position:fixed; bottom:14px; left:50%; transform:translateX(-50%);
     color:white; font-size:14px; background:rgba(0,0,0,.45);
     padding:6px 10px; border-radius:999px; opacity:.75; z-index:5; pointer-events:none;
   }
-
-  /* description panel, pops up centered when the photo is tapped */
   .panel {
     position:fixed; top:50%; left:50%; width:min(400px, 88vw);
     background:#111; color:#fff; z-index:10;
@@ -36,7 +32,6 @@
     background:rgba(255,255,255,.08); border:none; color:#fff; font-size:18px; cursor:pointer;
     margin-bottom:8px;
   }
-
   .scrim {
     position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:9;
     opacity:0; pointer-events:none; transition:opacity .3s ease;
@@ -45,22 +40,41 @@
 </style>
 </head>
 <body>
-
 <button class="stage" id="stage" aria-label="Show dish details">
-  <img src="special4.jpg" alt="Pan Seared Black Cod">
+  <img id="special-image" src="special4.jpg" alt="Today's Special">
 </button>
-
 <div class="hint">Tap the photo for details</div>
-
 <div class="scrim" id="scrim"></div>
 <aside class="panel" id="panel" aria-hidden="true" aria-label="Dish details">
   <button class="panel-close" id="panelClose" aria-label="Close details">×</button>
-  <h2>Pan Seared Black Cod</h2>
-  <p class="price">$38</p>
-  <p class="desc">Red Wine Beurre Rouge, Charred Asparagus, Roasted Wild Mushrooms, Crispy Fingerling Potatoes, Pickled Scallions, Pea Greens</p>
+  <h2 id="special-title">Pan Seared Black Cod</h2>
+  <p id="special-price" class="price">$38</p>
+  <p id="special-desc" class="desc">Red Wine Beurre Rouge, Charred Asparagus, Roasted Wild Mushrooms, Crispy Fingerling Potatoes, Pickled Scallions, Pea Greens</p>
 </aside>
 
 <script>
+  // Load latest special from JSON
+  fetch('specials.json')
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.length > 0) {
+        const s = data[0];
+        
+        // Update image
+        document.getElementById('special-image').src = s.image;
+        document.getElementById('special-image').alt = s.title;
+        
+        // Update panel
+        document.getElementById('special-title').textContent = s.title;
+        document.getElementById('special-price').textContent = '$' + s.price;
+        document.getElementById('special-desc').textContent = s.description;
+      }
+    })
+    .catch(err => {
+      console.log("No special found yet", err);
+    });
+
+  // Panel controls
   const stage = document.getElementById('stage');
   const panel = document.getElementById('panel');
   const scrim = document.getElementById('scrim');
@@ -81,8 +95,7 @@
   scrim.addEventListener('click', closePanel);
   panelClose.addEventListener('click', closePanel);
 
-  setTimeout(() => document.querySelector('.hint')?.remove(), 4000);
+  setTimeout(() => document.querySelector('.hint')?.remove(), 5000);
 </script>
-
 </body>
 </html>
