@@ -42,7 +42,18 @@
     const BRANCH = "main";
     const IMAGE_FOLDER = "images/specials/";
     let GITHUB_TOKEN = "";
-
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      if (!base64) reject(new Error("Failed to read image"));
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error("Error reading file"));
+    reader.readAsDataURL(file);
+  });
+}
     function checkPin() {
       if (simpleHash(document.getElementById("pin").value) === SECRET_PIN_HASH) {
         document.getElementById("pin-screen").classList.add("hidden");
