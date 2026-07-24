@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Specials Admin</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #f9f9f9; }
+    input, textarea, button { display: block; width: 100%; margin: 12px 0; padding: 12px; font-size: 16px; }
+    button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
+    button:hover { background: #218838; }
+    #status { margin-top: 15px; padding: 12px; background: #e9ecef; border-radius: 4px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Dinner Specials Admin</h1>
+  
+  <div id="pin-screen">
+    <input type="password" id="pin" placeholder="Enter Admin PIN" />
+    <button onclick="checkPin()">Unlock</button>
+  </div>
+
+  <div id="admin-form" class="hidden">
+    <input type="text" id="title" placeholder="Special Name (e.g., Grilled Salmon)" required />
+    <input type="number" id="price" placeholder="Price (e.g., 24.99)" step="0.01" required />
+    <textarea id="description" rows="5" placeholder="Full description..." required></textarea>
+    <input type="file" id="image" accept="image/*" required />
+    <button onclick="submitSpecial()">Upload Image & Update Site</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    // === CONFIGURATION ===
+    const SECRET_PIN_HASH = "8f434346648f6b96df89dda901c5176b"; // Hash of default PIN "1234" - change after first test
+    const REPO = "tsyruk/restaurant-specials";
+    const BRANCH = "main";
+    const GITHUB_TOKEN = "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"; // ← REPLACE WITH YOUR TOKEN
+    const IMAGE_FOLDER = "images/specials/";
+    // =====================
+
+    function checkPin() {
+      const inputPin = document.getElementById("pin").value;
+      if (simpleHash(inputPin) === SECRET_PIN_HASH) {
+        document.getElementById("pin-screen").classList.add("hidden");
+        document.getElementById("admin-form").classList.remove("hidden");
+      } else {
+        alert("Incorrect PIN");
+      }
+    }
+
+    function simpleHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash = hash & hash;
+      }
+      return Math.abs(hash).toString(16);
+    }
+
+    async function submitSpecial() {
+      const status = document.getElementById("status");
+      status.textContent = "Uploading to GitHub...";
+
+      const title = document.getElementById("title").value.trim();
+      const price = parseFloat(document.getElementById("price").value);
+      const description = document.getElementById("description").value.trim();
+      const fileInput = document.getElementById("image");
+
+      if (!title || !price || !description || !fileInput.files[0]) {
+        status.textContent = "Please fill all fields and select an image.";
+        return;
+      }
+
+      const imageFile = fileInput.files[0];
+      const timestamp = Date.now();
+      const imageName = `${timestamp}-${imageFile.name.replace(/\s+/g, '-')}`;
+      const imagePath = IMAGE_FOLDER + imageName;
+
+      try {
+        const imageBase64 = await fileToBase64(imageFile);
+        
+        await updateGitHubFile(imagePath, imageBase64, `Add special image: ${title}`);
+
+        const newSpecial = {
+          title,
+          price,
+          description,
+          image: `/${imagePath}`,
+          date: new Date().toISOString().split('T')[0]
+        };
+
+        await updateGitHubFile("specials.json", JSON.stringify([newSpecial], null, 2), `Update daily special: ${title}`);
+
+        status.innerHTML = `✅ Success! Special updated.<br>Refresh your main page.`;
+        
+        // Clear form
+        document.getElementById("title").value = '';
+        document.getElementById("price").value = '';
+        document.getElementById("description").value = '';
+        document.getElementById("image").value = '';
+      } catch (err) {
+        status.textContent = "Upload failed: " + err.message;
+        console.error(err);
+      }
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function updateGitHubFile(path, content, message) {
+      const url = `https://api.github.com/repos/${REPO}/contents/${path}`;
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Authorization": `token ${GITHUB_TOKEN}`,
+          "Accept": "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+          "User-Agent": "Specials-Admin"
+        },
+        body: JSON.stringify({
+          message: message,
+          content: content,
+          branch: BRANCH
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || response.statusText);
+      }
+    }
+  </script>
+</body>
+</html>
