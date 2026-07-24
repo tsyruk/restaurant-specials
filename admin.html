@@ -17,54 +17,50 @@
   <h1>Dinner Specials Admin</h1>
   
   <div id="pin-screen">
-    <input type="password" id="pin" placeholder="Enter Admin PIN (default: 1234)" />
+    <input type="password" id="pin" placeholder="Enter PIN (default 1234)" />
     <button onclick="checkPin()">Unlock</button>
   </div>
 
   <div id="token-screen" class="hidden">
-    <input type="password" id="token" placeholder="Paste your GitHub Token (ghp_...)" />
+    <input type="password" id="token" placeholder="Paste GitHub Token here" />
     <button onclick="saveTokenAndShowForm()">Continue</button>
-    <div id="token-status" style="color:red;"></div>
+    <div id="token-status" style="color:red; margin-top:10px;"></div>
   </div>
 
   <div id="admin-form" class="hidden">
-    <input type="text" id="title" placeholder="Special Name (e.g., Grilled Salmon)" required />
-    <input type="number" id="price" placeholder="Price (e.g., 24.99)" step="0.01" required />
-    <textarea id="description" rows="5" placeholder="Full description..." required></textarea>
+    <input type="text" id="title" placeholder="Special Name" required />
+    <input type="number" id="price" placeholder="Price" step="0.01" required />
+    <textarea id="description" rows="5" placeholder="Description..." required></textarea>
     <input type="file" id="image" accept="image/*" required />
-    <button onclick="submitSpecial()">Upload Image & Update Site</button>
+    <button onclick="submitSpecial()">Upload & Update</button>
     <div id="status"></div>
   </div>
 
   <script>
-    const SECRET_PIN_HASH = "2ca0033"; // 
+    const SECRET_PIN_HASH = "2ca0033";
     const REPO = "tsyruk/restaurant-specials";
     const BRANCH = "main";
     const IMAGE_FOLDER = "images/specials/";
-
     let GITHUB_TOKEN = "";
 
     function checkPin() {
-      const inputPin = document.getElementById("pin").value;
-      if (simpleHash(inputPin) === SECRET_PIN_HASH) {
+      if (simpleHash(document.getElementById("pin").value) === SECRET_PIN_HASH) {
         document.getElementById("pin-screen").classList.add("hidden");
         document.getElementById("token-screen").classList.remove("hidden");
-      } else {
-        alert("Incorrect PIN");
-      }
+      } else alert("Wrong PIN");
     }
 
     function saveTokenAndShowForm() {
       GITHUB_TOKEN = document.getElementById("token").value.trim();
-      if (!GITHUB_TOKEN.startsWith("ghp_")) {
-        document.getElementById("token-status").textContent = "Token must start with ghp_";
-        return;
+      if (GITHUB_TOKEN) {
+        document.getElementById("token-screen").classList.add("hidden");
+        document.getElementById("admin-form").classList.remove("hidden");
+      } else {
+        document.getElementById("token-status").textContent = "Please paste a token";
       }
-      document.getElementById("token-screen").classList.add("hidden");
-      document.getElementById("admin-form").classList.remove("hidden");
     }
 
-    function simpleHash(str) {
+    function simpleHash(str) { /* same as before */ 
       let hash = 0;
       for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
@@ -74,10 +70,10 @@
       return Math.abs(hash).toString(16);
     }
 
-    // ... rest of the functions (submitSpecial, fileToBase64, updateGitHubFile) same as before
+    // submitSpecial, fileToBase64, updateGitHubFile functions (same as previous version)
     async function submitSpecial() {
       const status = document.getElementById("status");
-      status.textContent = "Uploading to GitHub...";
+      status.textContent = "Uploading...";
 
       const title = document.getElementById("title").value.trim();
       const price = parseFloat(document.getElementById("price").value);
@@ -85,38 +81,24 @@
       const fileInput = document.getElementById("image");
 
       if (!title || !price || !description || !fileInput.files[0]) {
-        status.textContent = "Please fill all fields and select an image.";
+        status.textContent = "Fill all fields and select image";
         return;
       }
 
       const imageFile = fileInput.files[0];
-      const timestamp = Date.now();
-      const imageName = `${timestamp}-${imageFile.name.replace(/\s+/g, '-')}`;
+      const imageName = Date.now() + "-" + imageFile.name.replace(/\s+/g, '-');
       const imagePath = IMAGE_FOLDER + imageName;
 
       try {
         const imageBase64 = await fileToBase64(imageFile);
-        
-        await updateGitHubFile(imagePath, imageBase64, `Add special image: ${title}`);
+        await updateGitHubFile(imagePath, imageBase64, `Add image: ${title}`);
 
-        const newSpecial = {
-          title, price, description,
-          image: `/${imagePath}`,
-          date: new Date().toISOString().split('T')[0]
-        };
+        const newSpecial = { title, price, description, image: `/${imagePath}`, date: new Date().toISOString().split('T')[0] };
+        await updateGitHubFile("specials.json", JSON.stringify([newSpecial], null, 2), `Update special: ${title}`);
 
-        await updateGitHubFile("specials.json", JSON.stringify([newSpecial], null, 2), `Update daily special: ${title}`);
-
-        status.innerHTML = `✅ Success! Special updated.<br>Refresh your main page.`;
-        
-        // Clear form
-        document.getElementById("title").value = '';
-        document.getElementById("price").value = '';
-        document.getElementById("description").value = '';
-        document.getElementById("image").value = '';
+        status.innerHTML = `✅ Success! Refresh site to see changes.`;
       } catch (err) {
-        status.textContent = "Upload failed: " + err.message;
-        console.error(err);
+        status.textContent = "Error: " + err.message;
       }
     }
 
@@ -136,19 +118,14 @@
         headers: {
           "Authorization": `token ${GITHUB_TOKEN}`,
           "Accept": "application/vnd.github.v3+json",
-          "Content-Type": "application/json",
-          "User-Agent": "Specials-Admin"
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          message: message,
-          content: content,
-          branch: BRANCH
-        })
+        body: JSON.stringify({ message, content, branch: BRANCH })
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || response.statusText);
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || response.statusText);
       }
     }
   </script>
