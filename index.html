@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover"
@@ -21,13 +22,26 @@
       height: 100%;
       background: #000;
       overflow: hidden;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
     }
 
-    /* SWIPE CONTAINER */
+    body {
+      min-height: 100dvh;
+    }
+
+    /* ==========================
+       SWIPE CONTAINER
+       ========================== */
+
     .viewer {
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
 
       display: flex;
 
@@ -40,40 +54,53 @@
       -webkit-overflow-scrolling: touch;
 
       scrollbar-width: none;
+
+      overscroll-behavior-x: contain;
     }
 
     .viewer::-webkit-scrollbar {
       display: none;
     }
 
-    /* EACH SPECIAL = ONE FULL SCREEN PAGE */
+    /* ==========================
+       EACH SPECIAL
+       ========================== */
+
     .slide {
       flex: 0 0 100vw;
+
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
+
+      position: relative;
 
       scroll-snap-align: start;
       scroll-snap-stop: always;
 
-      position: relative;
-
       background: #000;
     }
 
-    /* TAP AREA */
+    /* ==========================
+       FULL SCREEN IMAGE BUTTON
+       ========================== */
+
     .special-button {
       width: 100%;
       height: 100%;
 
-      padding: 0;
-      margin: 0;
-
-      border: 0;
-      background: #000;
-
       display: block;
 
+      margin: 0;
+      padding: 0;
+
+      border: 0;
+
+      background: #000;
+
       cursor: pointer;
+
+      appearance: none;
+      -webkit-appearance: none;
     }
 
     .special-button img {
@@ -82,151 +109,24 @@
 
       display: block;
 
+      /*
+        COVER = fills the ENTIRE tablet screen.
+        Some edges may crop slightly depending
+        on the photo's aspect ratio.
+      */
       object-fit: cover;
       object-position: center;
+
+      user-select: none;
+      -webkit-user-select: none;
+
+      -webkit-user-drag: none;
     }
 
-    /* On bigger screens don't crop the image as much */
-    @media (min-width: 700px) {
-      .special-button img {
-        object-fit: contain;
-      }
-    }
+    /* ==========================
+       PAGE DOTS
+       ========================== */
 
-    /* BOTTOM HELP TEXT */
-    .hint {
-      position: fixed;
-
-      bottom: max(16px, env(safe-area-inset-bottom));
-      left: 50%;
-
-      transform: translateX(-50%);
-
-      z-index: 20;
-
-      color: white;
-      background: rgba(0, 0, 0, 0.55);
-
-      padding: 8px 14px;
-
-      border-radius: 999px;
-
-      font-size: 14px;
-
-      white-space: nowrap;
-
-      pointer-events: none;
-    }
-
-    /* DARK BACKGROUND BEHIND DESCRIPTION */
-    .scrim {
-      position: fixed;
-      inset: 0;
-
-      z-index: 30;
-
-      background: rgba(0, 0, 0, 0.55);
-
-      opacity: 0;
-
-      pointer-events: none;
-
-      transition: opacity 0.2s ease;
-    }
-
-    .scrim.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    /* DESCRIPTION POPUP */
-    .panel {
-      position: fixed;
-
-      top: 50%;
-      left: 50%;
-
-      width: min(420px, 88vw);
-
-      transform: translate(-50%, -50%) scale(0.92);
-
-      z-index: 40;
-
-      background: #111;
-      color: white;
-
-      padding: 26px;
-
-      border-radius: 18px;
-
-      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7);
-
-      opacity: 0;
-
-      pointer-events: none;
-
-      transition:
-        transform 0.2s ease,
-        opacity 0.2s ease;
-    }
-
-    .panel.open {
-      opacity: 1;
-
-      pointer-events: auto;
-
-      transform: translate(-50%, -50%) scale(1);
-    }
-
-    .panel-close {
-      position: absolute;
-
-      top: 12px;
-      right: 12px;
-
-      width: 36px;
-      height: 36px;
-
-      border: 0;
-
-      border-radius: 50%;
-
-      background: rgba(255, 255, 255, 0.1);
-
-      color: white;
-
-      font-size: 22px;
-
-      cursor: pointer;
-    }
-
-    .panel h2 {
-      margin: 0 40px 6px 0;
-
-      font-size: 25px;
-    }
-
-    .price {
-      margin: 0 0 18px;
-
-      color: #f2b134;
-
-      font-size: 18px;
-
-      font-weight: 700;
-    }
-
-    .desc {
-      margin: 0;
-
-      color: #ddd;
-
-      font-size: 16px;
-
-      line-height: 1.55;
-    }
-
-    /* PAGE DOTS */
     .dots {
       position: fixed;
 
@@ -252,22 +152,265 @@
 
       background: rgba(255, 255, 255, 0.45);
 
-      transition: all 0.2s ease;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+
+      transition:
+        width 0.2s ease,
+        background 0.2s ease;
     }
 
     .dot.active {
       width: 22px;
 
-      border-radius: 10px;
+      border-radius: 999px;
 
-      background: white;
+      background: #fff;
     }
+
+    /* ==========================
+       BOTTOM INSTRUCTIONS
+       ========================== */
+
+    .hint {
+      position: fixed;
+
+      bottom: max(
+        18px,
+        calc(env(safe-area-inset-bottom) + 8px)
+      );
+
+      left: 50%;
+
+      transform: translateX(-50%);
+
+      z-index: 20;
+
+      color: #fff;
+
+      background: rgba(0, 0, 0, 0.58);
+
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+
+      padding: 9px 15px;
+
+      border-radius: 999px;
+
+      font-size: 14px;
+      font-weight: 500;
+
+      white-space: nowrap;
+
+      pointer-events: none;
+
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+
+      transition: opacity 0.3s ease;
+    }
+
+    /* ==========================
+       DARK OVERLAY
+       ========================== */
+
+    .scrim {
+      position: fixed;
+
+      inset: 0;
+
+      z-index: 30;
+
+      background: rgba(0, 0, 0, 0.62);
+
+      opacity: 0;
+
+      pointer-events: none;
+
+      transition: opacity 0.2s ease;
+
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+    }
+
+    .scrim.open {
+      opacity: 1;
+
+      pointer-events: auto;
+    }
+
+    /* ==========================
+       DESCRIPTION POPUP
+       ========================== */
+
+    .panel {
+      position: fixed;
+
+      top: 50%;
+      left: 50%;
+
+      width: min(500px, 88vw);
+      max-height: 80dvh;
+
+      overflow-y: auto;
+
+      transform:
+        translate(-50%, -50%)
+        scale(0.94);
+
+      z-index: 40;
+
+      background: rgba(17, 17, 17, 0.97);
+
+      color: #fff;
+
+      padding: 30px;
+
+      border-radius: 22px;
+
+      border: 1px solid rgba(255, 255, 255, 0.08);
+
+      box-shadow:
+        0 18px 60px rgba(0, 0, 0, 0.75);
+
+      opacity: 0;
+
+      pointer-events: none;
+
+      transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .panel.open {
+      opacity: 1;
+
+      pointer-events: auto;
+
+      transform:
+        translate(-50%, -50%)
+        scale(1);
+    }
+
+    /* ==========================
+       CLOSE BUTTON
+       ========================== */
+
+    .panel-close {
+      position: absolute;
+
+      top: 12px;
+      right: 12px;
+
+      width: 40px;
+      height: 40px;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      padding: 0;
+
+      border: 0;
+
+      border-radius: 50%;
+
+      background: rgba(255, 255, 255, 0.1);
+
+      color: #fff;
+
+      font-size: 26px;
+      line-height: 1;
+
+      cursor: pointer;
+    }
+
+    .panel-close:active {
+      transform: scale(0.95);
+    }
+
+    /* ==========================
+       PANEL TEXT
+       ========================== */
+
+    .panel h2 {
+      margin: 0 48px 8px 0;
+
+      font-size: clamp(24px, 4vw, 34px);
+      line-height: 1.15;
+    }
+
+    .price {
+      margin: 0 0 18px;
+
+      color: #f2b134;
+
+      font-size: clamp(19px, 3vw, 24px);
+
+      font-weight: 700;
+    }
+
+    .desc {
+      margin: 0;
+
+      color: #e5e5e5;
+
+      font-size: clamp(16px, 2.5vw, 20px);
+
+      line-height: 1.6;
+    }
+
+    /* ==========================
+       TABLET / LARGE SCREEN
+       ========================== */
+
+    @media (min-width: 700px) {
+
+      .panel {
+        padding: 36px;
+      }
+
+      .hint {
+        font-size: 16px;
+
+        padding: 10px 18px;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+      }
+
+      .dot.active {
+        width: 26px;
+      }
+
+    }
+
+    /* ==========================
+       LANDSCAPE TABLET
+       ========================== */
+
+    @media (orientation: landscape) {
+
+      .special-button img {
+        object-position: center center;
+      }
+
+      .panel {
+        width: min(560px, 74vw);
+      }
+
+    }
+
   </style>
 </head>
 
 <body>
 
-  <main class="viewer" id="viewer">
+  <main
+    class="viewer"
+    id="viewer"
+  >
 
     <!-- ==========================
          SPECIAL #1
@@ -278,15 +421,20 @@
       <button
         class="special-button"
         type="button"
+
         data-title="Pan-Fried Skate Wing"
+
         data-price="$40"
-      data-description="It's a mild, flaky skate wing that's pan-fried and served over creamy lobster risotto with a roasted tomato vinaigrette. It's finished with grilled zucchini, shaved fennel, and fresh dill. The fish is very delicate and isn't fishy—it's one of our lighter seafood options."
-        aria-label="Open details for Special 1"
+
+        data-description="It's a mild, flaky skate wing that's pan-fried and served over creamy lobster risotto with a roasted tomato vinaigrette. It's finished with grilled zucchini, shaved fennel, and fresh dill. The fish is very delicate and isn't fishy - it's one of our lighter seafood options."
+
+        aria-label="Open details for Pan-Fried Skate Wing"
       >
 
         <img
           src="special1.jpg"
-          alt="Special #1"
+          alt="Pan-Fried Skate Wing"
+          draggable="false"
         >
 
       </button>
@@ -303,15 +451,20 @@
       <button
         class="special-button"
         type="button"
+
         data-title="Lavender Blueberry Panna Cotta"
+
         data-price="$12"
+
         data-description="It's a creamy lavender panna cotta topped with a sweet blueberry compote. It's served with a brown butter pistachio shortbread crumble for crunch and finished with fresh whipped cream. It's light, creamy, and not overly sweet."
-        aria-label="Open details for Special 2"
+
+        aria-label="Open details for Lavender Blueberry Panna Cotta"
       >
 
         <img
           src="special2.jpg"
-          alt="Special #2"
+          alt="Lavender Blueberry Panna Cotta"
+          draggable="false"
         >
 
       </button>
@@ -321,32 +474,52 @@
   </main>
 
 
-  <!-- PAGE INDICATORS -->
-  <div class="dots" aria-hidden="true">
+  <!-- ==========================
+       PAGE INDICATORS
+       ========================== -->
+
+  <div
+    class="dots"
+    aria-hidden="true"
+  >
 
     <div class="dot active"></div>
+
     <div class="dot"></div>
 
   </div>
 
 
-  <!-- INSTRUCTIONS -->
-  <div class="hint" id="hint">
+  <!-- ==========================
+       INSTRUCTIONS
+       ========================== -->
+
+  <div
+    class="hint"
+    id="hint"
+  >
     Tap for details • Swipe for next special
   </div>
 
 
-  <!-- DARK BACKGROUND -->
+  <!-- ==========================
+       DARK BACKGROUND
+       ========================== -->
+
   <div
     class="scrim"
     id="scrim"
   ></div>
 
 
-  <!-- DESCRIPTION PANEL -->
+  <!-- ==========================
+       DESCRIPTION PANEL
+       ========================== -->
+
   <aside
     class="panel"
     id="panel"
+
     aria-hidden="true"
     aria-label="Dish details"
   >
@@ -354,18 +527,23 @@
     <button
       class="panel-close"
       id="panelClose"
+
       type="button"
+
       aria-label="Close details"
     >
       ×
     </button>
 
+
     <h2 id="specialTitle"></h2>
+
 
     <p
       class="price"
       id="specialPrice"
     ></p>
+
 
     <p
       class="desc"
@@ -377,7 +555,8 @@
 
   <script>
 
-    const viewer = document.getElementById("viewer");
+    const viewer =
+      document.getElementById("viewer");
 
     const buttons =
       document.querySelectorAll(".special-button");
@@ -403,10 +582,13 @@
     const dots =
       document.querySelectorAll(".dot");
 
+    const hint =
+      document.getElementById("hint");
 
-    /* --------------------------
+
+    /* ==========================
        OPEN DESCRIPTION
-       -------------------------- */
+       ========================== */
 
     buttons.forEach(button => {
 
@@ -435,9 +617,9 @@
     });
 
 
-    /* --------------------------
+    /* ==========================
        CLOSE DESCRIPTION
-       -------------------------- */
+       ========================== */
 
     function closePanel() {
 
@@ -452,10 +634,12 @@
 
     }
 
+
     panelClose.addEventListener(
       "click",
       closePanel
     );
+
 
     scrim.addEventListener(
       "click",
@@ -463,11 +647,27 @@
     );
 
 
-    /* --------------------------
-       UPDATE DOT WHEN SWIPING
-       -------------------------- */
+    /* CLOSE WITH ESC KEY */
+    document.addEventListener(
+      "keydown",
+      event => {
 
-    viewer.addEventListener("scroll", () => {
+        if (
+          event.key === "Escape" &&
+          panel.classList.contains("open")
+        ) {
+          closePanel();
+        }
+
+      }
+    );
+
+
+    /* ==========================
+       UPDATE DOTS WHILE SWIPING
+       ========================== */
+
+    function updateDots() {
 
       const page =
         Math.round(
@@ -486,18 +686,33 @@
         }
       );
 
-    });
+    }
 
 
-    /* --------------------------
+    viewer.addEventListener(
+      "scroll",
+      updateDots,
+      { passive: true }
+    );
+
+
+    /* ==========================
        HIDE INSTRUCTIONS
-       -------------------------- */
+       ========================== */
 
     setTimeout(() => {
 
-      document
-        .getElementById("hint")
-        ?.remove();
+      if (hint) {
+
+        hint.style.opacity = "0";
+
+        setTimeout(() => {
+
+          hint.remove();
+
+        }, 300);
+
+      }
 
     }, 6000);
 
