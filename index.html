@@ -1,722 +1,293 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
-
-  <title>Today's Specials</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      overflow: hidden;
-
-      font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-    }
-
-    body {
-      min-height: 100dvh;
-    }
-
-    /* ==========================
-       SWIPE CONTAINER
-       ========================== */
-
-    .viewer {
-      width: 100vw;
-      height: 100dvh;
-
-      display: flex;
-
-      overflow-x: auto;
-      overflow-y: hidden;
-
-      scroll-snap-type: x mandatory;
-      scroll-behavior: smooth;
-
-      -webkit-overflow-scrolling: touch;
-
-      scrollbar-width: none;
-
-      overscroll-behavior-x: contain;
-    }
-
-    .viewer::-webkit-scrollbar {
-      display: none;
-    }
-
-    /* ==========================
-       EACH SPECIAL
-       ========================== */
-
-    .slide {
-      flex: 0 0 100vw;
-
-      width: 100vw;
-      height: 100dvh;
-
-      position: relative;
-
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-
-      background: #000;
-    }
-
-    /* ==========================
-       FULL SCREEN IMAGE BUTTON
-       ========================== */
-
-    .special-button {
-      width: 100%;
-      height: 100%;
-
-      display: block;
-
-      margin: 0;
-      padding: 0;
-
-      border: 0;
-
-      background: #000;
-
-      cursor: pointer;
-
-      appearance: none;
-      -webkit-appearance: none;
-    }
-
-    .special-button img {
-      width: 100%;
-      height: 100%;
-
-      display: block;
-
-      /*
-        COVER = fills the ENTIRE tablet screen.
-        Some edges may crop slightly depending
-        on the photo's aspect ratio.
-      */
-      object-fit: cover;
-      object-position: center;
-
-      user-select: none;
-      -webkit-user-select: none;
-
-      -webkit-user-drag: none;
-    }
-
-    /* ==========================
-       PAGE DOTS
-       ========================== */
-
-    .dots {
-      position: fixed;
-
-      top: max(18px, env(safe-area-inset-top));
-      left: 50%;
-
-      transform: translateX(-50%);
-
-      z-index: 20;
-
-      display: flex;
-
-      gap: 8px;
-
-      pointer-events: none;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-
-      border-radius: 50%;
-
-      background: rgba(255, 255, 255, 0.45);
-
-      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
-
-      transition:
-        width 0.2s ease,
-        background 0.2s ease;
-    }
-
-    .dot.active {
-      width: 22px;
-
-      border-radius: 999px;
-
-      background: #fff;
-    }
-
-    /* ==========================
-       BOTTOM INSTRUCTIONS
-       ========================== */
-
-    .hint {
-      position: fixed;
-
-      bottom: max(
-        18px,
-        calc(env(safe-area-inset-bottom) + 8px)
-      );
-
-      left: 50%;
-
-      transform: translateX(-50%);
-
-      z-index: 20;
-
-      color: #fff;
-
-      background: rgba(0, 0, 0, 0.58);
-
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-
-      padding: 9px 15px;
-
-      border-radius: 999px;
-
-      font-size: 14px;
-      font-weight: 500;
-
-      white-space: nowrap;
-
-      pointer-events: none;
-
-      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
-
-      transition: opacity 0.3s ease;
-    }
-
-    /* ==========================
-       DARK OVERLAY
-       ========================== */
-
-    .scrim {
-      position: fixed;
-
-      inset: 0;
-
-      z-index: 30;
-
-      background: rgba(0, 0, 0, 0.62);
-
-      opacity: 0;
-
-      pointer-events: none;
-
-      transition: opacity 0.2s ease;
-
-      backdrop-filter: blur(3px);
-      -webkit-backdrop-filter: blur(3px);
-    }
-
-    .scrim.open {
-      opacity: 1;
-
-      pointer-events: auto;
-    }
-
-    /* ==========================
-       DESCRIPTION POPUP
-       ========================== */
-
-    .panel {
-      position: fixed;
-
-      top: 50%;
-      left: 50%;
-
-      width: min(500px, 88vw);
-      max-height: 80dvh;
-
-      overflow-y: auto;
-
-      transform:
-        translate(-50%, -50%)
-        scale(0.94);
-
-      z-index: 40;
-
-      background: rgba(17, 17, 17, 0.97);
-
-      color: #fff;
-
-      padding: 30px;
-
-      border-radius: 22px;
-
-      border: 1px solid rgba(255, 255, 255, 0.08);
-
-      box-shadow:
-        0 18px 60px rgba(0, 0, 0, 0.75);
-
-      opacity: 0;
-
-      pointer-events: none;
-
-      transition:
-        transform 0.2s ease,
-        opacity 0.2s ease;
-    }
-
-    .panel.open {
-      opacity: 1;
-
-      pointer-events: auto;
-
-      transform:
-        translate(-50%, -50%)
-        scale(1);
-    }
-
-    /* ==========================
-       CLOSE BUTTON
-       ========================== */
-
-    .panel-close {
-      position: absolute;
-
-      top: 12px;
-      right: 12px;
-
-      width: 40px;
-      height: 40px;
-
-      display: flex;
-
-      align-items: center;
-      justify-content: center;
-
-      padding: 0;
-
-      border: 0;
-
-      border-radius: 50%;
-
-      background: rgba(255, 255, 255, 0.1);
-
-      color: #fff;
-
-      font-size: 26px;
-      line-height: 1;
-
-      cursor: pointer;
-    }
-
-    .panel-close:active {
-      transform: scale(0.95);
-    }
-
-    /* ==========================
-       PANEL TEXT
-       ========================== */
-
-    .panel h2 {
-      margin: 0 48px 8px 0;
-
-      font-size: clamp(24px, 4vw, 34px);
-      line-height: 1.15;
-    }
-
-    .price {
-      margin: 0 0 18px;
-
-      color: #f2b134;
-
-      font-size: clamp(19px, 3vw, 24px);
-
-      font-weight: 700;
-    }
-
-    .desc {
-      margin: 0;
-
-      color: #e5e5e5;
-
-      font-size: clamp(16px, 2.5vw, 20px);
-
-      line-height: 1.6;
-    }
-
-    /* ==========================
-       TABLET / LARGE SCREEN
-       ========================== */
-
-    @media (min-width: 700px) {
-
-      .panel {
-        padding: 36px;
-      }
-
-      .hint {
-        font-size: 16px;
-
-        padding: 10px 18px;
-      }
-
-      .dot {
-        width: 10px;
-        height: 10px;
-      }
-
-      .dot.active {
-        width: 26px;
-      }
-
-    }
-
-    /* ==========================
-       LANDSCAPE TABLET
-       ========================== */
-
-    @media (orientation: landscape) {
-
-      .special-button img {
-        object-position: center center;
-      }
-
-      .panel {
-        width: min(560px, 74vw);
-      }
-
-    }
-
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Today's Specials</title>
+
+<style>
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.stage {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.hint {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 14px;
+  background: rgba(0,0,0,.45);
+  padding: 6px 10px;
+  border-radius: 999px;
+  opacity: .85;
+  z-index: 5;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.counter {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  color: white;
+  font-size: 13px;
+  background: rgba(0,0,0,.45);
+  padding: 6px 10px;
+  border-radius: 999px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: min(400px, 88vw);
+  background: #111;
+  color: #fff;
+  z-index: 10;
+  transform: translate(-50%, -50%) scale(.92);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .2s ease, opacity .2s ease;
+  box-shadow: 0 12px 40px rgba(0,0,0,.6);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 26px;
+  box-sizing: border-box;
+  border-radius: 16px;
+}
+
+.panel.open {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.panel h2 {
+  margin: 0 0 6px;
+  font-size: 24px;
+}
+
+.panel .price {
+  margin: 0 0 18px;
+  font-size: 17px;
+  color: #f2b134;
+  font-weight: 600;
+}
+
+.panel .desc {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: #ddd;
+}
+
+.panel-close {
+  align-self: flex-end;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 9;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+}
+
+.scrim.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+</style>
 </head>
 
 <body>
 
-  <main
-    class="viewer"
-    id="viewer"
-  >
+<button class="stage" id="stage" aria-label="Show dish details">
+  <img id="special-image" src="special5.jpg" alt="Scallop Crudo">
+</button>
+
+<div class="counter" id="counter">1 / 3</div>
+<div class="hint">Swipe for more specials • Tap for details</div>
+
+<div class="scrim" id="scrim"></div>
+
+<aside class="panel" id="panel">
+  <button class="panel-close" id="panelClose">×</button>
+
+  <h2 id="special-title">Scallop Crudo</h2>
+  <p id="special-price" class="price">$18</p>
+
+  <p id="special-desc" class="desc">
+    Fresh U-10 scallops with peach jam, prosciutto, chili crisp,
+    toasted popcorn, and pistachio — sweet, salty, with a little
+    heat and crunch.
+  </p>
+</aside>
+
+<script>
+const specials = [
+  {
+    title: "Scallop Crudo",
+    price: "18",
+    image: "special5.png",
+    description:
+      "Fresh U-10 scallops with peach jam, prosciutto, chili crisp, toasted popcorn, and pistachio — sweet, salty, with a little heat and crunch."
+  },
+
+  {
+    title: "Bluefish",
+    price: "36",
+    image: "special5.png",
+    description:
+      "Bluefish with crispy shallots and gravy, served with truffle fingerling potatoes and sautéed squash — rich, savory, and comforting."
+  },
+
+  {
+    title: "S'mores Tart",
+    price: "12",
+    image: "special5.png",
+    description:
+      "A fun, elevated take on classic s'mores in tart form — rich, chocolatey, and perfect for sharing."
+  }
+];
+
+let current = 0;
+
+const stage = document.getElementById("stage");
+const image = document.getElementById("special-image");
+const title = document.getElementById("special-title");
+const price = document.getElementById("special-price");
+const desc = document.getElementById("special-desc");
+const counter = document.getElementById("counter");
+
+const panel = document.getElementById("panel");
+const scrim = document.getElementById("scrim");
+const panelClose = document.getElementById("panelClose");
+
+function renderSpecial() {
+  const s = specials[current];
+
+  image.src = s.image;
+  image.alt = s.title;
+
+  title.textContent = s.title;
+  price.textContent = "$" + s.price;
+  desc.textContent = s.description;
+
+  counter.textContent = `${current + 1} / ${specials.length}`;
+}
+
+function nextSpecial() {
+  current = (current + 1) % specials.length;
+  renderSpecial();
+}
+
+function previousSpecial() {
+  current = (current - 1 + specials.length) % specials.length;
+  renderSpecial();
+}
+
+function openPanel() {
+  panel.classList.add("open");
+  scrim.classList.add("open");
+}
+
+function closePanel() {
+  panel.classList.remove("open");
+  scrim.classList.remove("open");
+}
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchMoved = false;
+
+stage.addEventListener("touchstart", (e) => {
+  const touch = e.changedTouches[0];
 
-    <!-- ==========================
-         SPECIAL #1
-         ========================== -->
+  touchStartX = touch.screenX;
+  touchStartY = touch.screenY;
+  touchMoved = false;
+}, { passive: true });
 
-    <section class="slide">
+stage.addEventListener("touchend", (e) => {
+  const touch = e.changedTouches[0];
 
-      <button
-        class="special-button"
-        type="button"
+  const dx = touch.screenX - touchStartX;
+  const dy = touch.screenY - touchStartY;
 
-        data-title="Coming soon!"
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+    touchMoved = true;
 
-        data-price=""
-
-        data-description=""
-
-        aria-label=""
-      >
-
-        <img
-          src="special5.png"
-          alt="Pan-Fried Skate Wing"
-          draggable="false"
-        >
-
-      </button>
-
-    </section>
-
-
-    <!-- ==========================
-         SPECIAL #2
-         ========================== -->
-
-    <section class="slide">
-
-      <button
-        class="special-button"
-        type="button"
-
-        data-title="Lavender Blueberry Panna Cotta"
-
-        data-price="$12"
-
-        data-description="It's a creamy lavender panna cotta topped with a sweet blueberry compote. It's served with a brown butter pistachio shortbread crumble for crunch and finished with fresh whipped cream. It's light, creamy, and not overly sweet."
-
-        aria-label="Open details for Lavender Blueberry Panna Cotta"
-      >
-
-        <img
-          src="special2.jpg"
-          alt="Lavender Blueberry Panna Cotta"
-          draggable="false"
-        >
-
-      </button>
-
-    </section>
-
-  </main>
-
-
-  <!-- ==========================
-       PAGE INDICATORS
-       ========================== -->
-
-  <div
-    class="dots"
-    aria-hidden="true"
-  >
-
-    <div class="dot active"></div>
-
-    <div class="dot"></div>
-
-  </div>
-
-
-  <!-- ==========================
-       INSTRUCTIONS
-       ========================== -->
-
-  <div
-    class="hint"
-    id="hint"
-  >
-    Tap for details • Swipe for next special
-  </div>
-
-
-  <!-- ==========================
-       DARK BACKGROUND
-       ========================== -->
-
-  <div
-    class="scrim"
-    id="scrim"
-  ></div>
-
-
-  <!-- ==========================
-       DESCRIPTION PANEL
-       ========================== -->
-
-  <aside
-    class="panel"
-    id="panel"
-
-    aria-hidden="true"
-    aria-label="Dish details"
-  >
-
-    <button
-      class="panel-close"
-      id="panelClose"
-
-      type="button"
-
-      aria-label="Close details"
-    >
-      ×
-    </button>
-
-
-    <h2 id="specialTitle"></h2>
-
-
-    <p
-      class="price"
-      id="specialPrice"
-    ></p>
-
-
-    <p
-      class="desc"
-      id="specialDescription"
-    ></p>
-
-  </aside>
-
-
-  <script>
-
-    const viewer =
-      document.getElementById("viewer");
-
-    const buttons =
-      document.querySelectorAll(".special-button");
-
-    const panel =
-      document.getElementById("panel");
-
-    const scrim =
-      document.getElementById("scrim");
-
-    const panelClose =
-      document.getElementById("panelClose");
-
-    const title =
-      document.getElementById("specialTitle");
-
-    const price =
-      document.getElementById("specialPrice");
-
-    const description =
-      document.getElementById("specialDescription");
-
-    const dots =
-      document.querySelectorAll(".dot");
-
-    const hint =
-      document.getElementById("hint");
-
-
-    /* ==========================
-       OPEN DESCRIPTION
-       ========================== */
-
-    buttons.forEach(button => {
-
-      button.addEventListener("click", () => {
-
-        title.textContent =
-          button.dataset.title;
-
-        price.textContent =
-          button.dataset.price;
-
-        description.textContent =
-          button.dataset.description;
-
-        panel.classList.add("open");
-
-        scrim.classList.add("open");
-
-        panel.setAttribute(
-          "aria-hidden",
-          "false"
-        );
-
-      });
-
-    });
-
-
-    /* ==========================
-       CLOSE DESCRIPTION
-       ========================== */
-
-    function closePanel() {
-
-      panel.classList.remove("open");
-
-      scrim.classList.remove("open");
-
-      panel.setAttribute(
-        "aria-hidden",
-        "true"
-      );
-
+    if (dx < 0) {
+      nextSpecial();
+    } else {
+      previousSpecial();
     }
+  }
+}, { passive: true });
 
+stage.addEventListener("click", () => {
+  if (touchMoved) {
+    touchMoved = false;
+    return;
+  }
 
-    panelClose.addEventListener(
-      "click",
-      closePanel
-    );
+  openPanel();
+});
 
+scrim.addEventListener("click", closePanel);
+panelClose.addEventListener("click", closePanel);
 
-    scrim.addEventListener(
-      "click",
-      closePanel
-    );
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight") nextSpecial();
+  if (e.key === "ArrowLeft") previousSpecial();
+  if (e.key === "Escape") closePanel();
+});
 
+renderSpecial();
 
-    /* CLOSE WITH ESC KEY */
-    document.addEventListener(
-      "keydown",
-      event => {
-
-        if (
-          event.key === "Escape" &&
-          panel.classList.contains("open")
-        ) {
-          closePanel();
-        }
-
-      }
-    );
-
-
-    /* ==========================
-       UPDATE DOTS WHILE SWIPING
-       ========================== */
-
-    function updateDots() {
-
-      const page =
-        Math.round(
-          viewer.scrollLeft /
-          viewer.clientWidth
-        );
-
-      dots.forEach(
-        (dot, index) => {
-
-          dot.classList.toggle(
-            "active",
-            index === page
-          );
-
-        }
-      );
-
-    }
-
-
-    viewer.addEventListener(
-      "scroll",
-      updateDots,
-      { passive: true }
-    );
-
-
-    /* ==========================
-       HIDE INSTRUCTIONS
-       ========================== */
-
-    setTimeout(() => {
-
-      if (hint) {
-
-        hint.style.opacity = "0";
-
-        setTimeout(() => {
-
-          hint.remove();
-
-        }, 300);
-
-      }
-
-    }, 6000);
-
-  </script>
+setTimeout(() => {
+  document.querySelector(".hint")?.remove();
+}, 6000);
+</script>
 
 </body>
 </html>
