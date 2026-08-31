@@ -141,7 +141,7 @@ html, body {
 <body>
 
 <button class="stage" id="stage" aria-label="Show dish details">
-  <img id="special-image" src="special5.png" alt="Scallop Crudo">
+  <img id="special-image" src="special7.jpg" alt="Shrimp Ceviche">
 </button>
 
 <div class="counter" id="counter">1 / 3</div>
@@ -150,11 +150,11 @@ html, body {
 <div class="scrim" id="scrim"></div>
 
 <aside class="panel" id="panel">
-  <button class="panel-close" id="panelClose">×</button>
+  <button class="panel-close" id="panelClose" aria-label="Close details">×</button>
 
-  <h2 id="special-title">Scallop Crudo</h2>
-  <p id="special-price" class="price">$18</p>
-
+  <h2 id="special-title"></h2>
+  <p id="special-price" class="price"></p>
+  <p id="special-desc" class="desc"></p>
 </aside>
 
 <script>
@@ -164,11 +164,11 @@ const specials = [
     price: "18",
     image: "special7.jpg",
     description:
-      "Fresh shrimp cured in citrus with cucumber, sweet corn, jalapeño, and salsa verde, served with crispy tortilla chips. Fresh, bright, and a little spicy"
+      "Fresh shrimp cured in citrus with cucumber, sweet corn, jalapeño, and salsa verde, served with crispy tortilla chips. Fresh, bright, and a little spicy."
   },
 
   {
-    title: "Pan-Seared Blackbass",
+    title: "Pan-Seared Black Bass",
     price: "38",
     image: "special8.jpg",
     description:
@@ -176,12 +176,12 @@ const specials = [
   },
 
   {
-    title: "Strawberry shortcake",
+    title: "Strawberry Shortcake",
     price: "13",
     image: "special9.jpg",
     description:
       "House-made biscuit with vanilla ice cream, marinated strawberries, and whipped cream. A fresh, classic summer dessert."
-  }, 
+  }
 ];
 
 let current = 0;
