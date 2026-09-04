@@ -141,7 +141,7 @@ html, body {
 <body>
 
 <button class="stage" id="stage" aria-label="Show dish details">
-  <img id="special-image" src="special7.jpg" alt="Shrimp Ceviche">
+  <img id="special-image" src="special1.jpg" alt="Crab Cocktail">
 </button>
 
 <div class="counter" id="counter">1 / 3</div>
@@ -151,7 +151,6 @@ html, body {
 
 <aside class="panel" id="panel">
   <button class="panel-close" id="panelClose" aria-label="Close details">×</button>
-
   <h2 id="special-title"></h2>
   <p id="special-price" class="price"></p>
   <p id="special-desc" class="desc"></p>
@@ -160,27 +159,25 @@ html, body {
 <script>
 const specials = [
   {
-    title: "",
-    price: "18",
+    title: "Crab Cocktail",
+    price: "24",
     image: "special1.jpg",
     description:
-      "Fresh shrimp cured in citrus with cucumber, sweet corn, jalapeño, and salsa verde, served with crispy tortilla chips. Fresh, bright, and a little spicy."
+      "Colossal lump crab, green tomato jam, pickled mustard seed, shaved fennel, crispy shallots, grilled sourdough."
   },
-
   {
-    title: "",
-    price: "38",
+    title: "Grilled Bone In Pork Chop",
+    price: "34",
     image: "special2.jpg",
     description:
-      "Tender, mild local black bass with heirloom tomato-lemon broth, crispy sweet potatoes, charred peppers and fennel, finished with Calabrian chili basil butter. Light and delicate with a little richness and heat."
+      "Charred romano beans, grilled kale, red currant glaze, pickled apples, sage butter crumbs."
   },
-
   {
-    title: "",
-    price: "13",
+    title: "Chocolate Peanut Butter Tart",
+    price: "12",
     image: "special3.jpg",
     description:
-      "House-made biscuit with vanilla ice cream, marinated strawberries, and whipped cream. A fresh, classic summer dessert."
+      "Dark chocolate ganache, peanut butter mousse, peanut brittle crunch, sea salt."
   }
 ];
 
@@ -192,7 +189,6 @@ const title = document.getElementById("special-title");
 const price = document.getElementById("special-price");
 const desc = document.getElementById("special-desc");
 const counter = document.getElementById("counter");
-
 const panel = document.getElementById("panel");
 const scrim = document.getElementById("scrim");
 const panelClose = document.getElementById("panelClose");
