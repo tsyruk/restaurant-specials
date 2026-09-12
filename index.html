@@ -34,19 +34,29 @@ html, body {
   -webkit-user-drag: none;
 }
 
+.counter {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  color: white;
+  background: rgba(0,0,0,.5);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  z-index: 5;
+}
+
 .hint {
   position: fixed;
   bottom: 14px;
   left: 50%;
   transform: translateX(-50%);
   color: white;
-  font-size: 14px;
-  background: rgba(0,0,0,.45);
+  background: rgba(0,0,0,.5);
   padding: 6px 10px;
   border-radius: 999px;
-  opacity: .85;
+  font-size: 14px;
   z-index: 5;
-  pointer-events: none;
   white-space: nowrap;
 }
 
@@ -61,10 +71,7 @@ html, body {
   transform: translate(-50%, -50%) scale(.92);
   opacity: 0;
   pointer-events: none;
-  transition: transform .2s ease, opacity .2s ease;
-  box-shadow: 0 12px 40px rgba(0,0,0,.6);
-  display: flex;
-  flex-direction: column;
+  transition: .2s ease;
   padding: 28px 26px;
   box-sizing: border-box;
   border-radius: 16px;
@@ -81,34 +88,32 @@ html, body {
   font-size: 24px;
 }
 
-.panel .price {
-  margin: 0 0 18px;
-  font-size: 17px;
+.price {
   color: #f2b134;
   font-weight: 600;
+  margin-bottom: 18px;
 }
 
-.panel .desc,
-.panel .allergens {
-  font-size: 16px;
-  line-height: 1.55;
+.desc,
+.allergens {
   color: #ddd;
+  line-height: 1.5;
+  font-size: 16px;
 }
 
-.panel .allergens {
+.allergens {
   margin-top: 16px;
 }
 
 .panel-close {
-  align-self: flex-end;
+  float: right;
+  border: none;
+  background: rgba(255,255,255,.08);
+  color: white;
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255,255,255,.08);
-  border: none;
-  color: #fff;
   font-size: 18px;
-  cursor: pointer;
 }
 
 .scrim {
@@ -118,7 +123,6 @@ html, body {
   z-index: 9;
   opacity: 0;
   pointer-events: none;
-  transition: opacity .3s ease;
 }
 
 .scrim.open {
@@ -131,59 +135,55 @@ html, body {
 <body>
 
 <button class="stage" id="stage">
-  <img src="special5.png" alt="Today's Specials">
+  <img id="special-image" src="special5.png" alt="Today's Specials">
 </button>
 
-<div class="hint">Tap for today's specials</div>
+<div class="counter" id="counter">1 / 4</div>
+<div class="hint">Swipe left or right • Tap for details</div>
 
 <div class="scrim" id="scrim"></div>
 
 <aside class="panel" id="panel">
-
   <button class="panel-close" id="panelClose">×</button>
 
   <h2 id="special-title"></h2>
-
   <p id="special-price" class="price"></p>
-
   <p id="special-desc" class="desc"></p>
-
   <p id="special-allergens" class="allergens"></p>
-
 </aside>
 
 <script>
-
 const specials = [
   {
     title: "Fig & Ginger Mule",
     price: "12",
+    image: "special5.png",
     description:
       "Black Infusions fig vodka, lime, ginger beer.",
     allergens: ""
   },
-
   {
     title: "Baked Oysters",
     price: "18",
+    image: "special5.png",
     description:
       "Garlic herb butter, parmesan, crispy breadcrumbs, lemon.",
     allergens:
       "Shellfish, dairy, gluten"
   },
-
   {
     title: "Chilean Sea Bass",
     price: "42",
+    image: "special5.png",
     description:
       "Brown butter miso, roasted delicata squash, broccolini.",
     allergens:
       "Fish, dairy"
   },
-
   {
     title: "Chocolate Peanut Butter Tart",
     price: "12",
+    image: "special5.png",
     description:
       "Dark chocolate ganache, peanut butter mousse, peanut brittle crunch, sea salt.",
     allergens:
@@ -194,62 +194,117 @@ const specials = [
 let current = 0;
 
 const stage = document.getElementById("stage");
+const image = document.getElementById("special-image");
+const counter = document.getElementById("counter");
+
 const panel = document.getElementById("panel");
 const scrim = document.getElementById("scrim");
+const panelClose = document.getElementById("panelClose");
 
 const title = document.getElementById("special-title");
 const price = document.getElementById("special-price");
 const desc = document.getElementById("special-desc");
 const allergens = document.getElementById("special-allergens");
 
-const panelClose = document.getElementById("panelClose");
-
 function renderSpecial() {
-
   const s = specials[current];
 
+  image.src = s.image;
+  image.alt = s.title;
+
   title.textContent = s.title;
-
   price.textContent = "$" + s.price;
-
   desc.textContent = s.description;
 
   allergens.textContent =
     s.allergens ? "Allergens: " + s.allergens : "";
+
+  counter.textContent =
+    `${current + 1} / ${specials.length}`;
+}
+
+function nextSpecial() {
+  current = (current + 1) % specials.length;
+  renderSpecial();
+}
+
+function previousSpecial() {
+  current =
+    (current - 1 + specials.length) % specials.length;
+
+  renderSpecial();
 }
 
 function openPanel() {
-
   renderSpecial();
-
   panel.classList.add("open");
   scrim.classList.add("open");
 }
 
 function closePanel() {
-
   panel.classList.remove("open");
   scrim.classList.remove("open");
 }
 
-stage.addEventListener("click", openPanel);
+let startX = 0;
+let startY = 0;
+let swiped = false;
 
-scrim.addEventListener("click", closePanel);
+stage.addEventListener("touchstart", function(e) {
+  const touch = e.changedTouches[0];
+
+  startX = touch.clientX;
+  startY = touch.clientY;
+  swiped = false;
+}, { passive: true });
+
+stage.addEventListener("touchend", function(e) {
+  const touch = e.changedTouches[0];
+
+  const diffX = touch.clientX - startX;
+  const diffY = touch.clientY - startY;
+
+  if (
+    Math.abs(diffX) > 50 &&
+    Math.abs(diffX) > Math.abs(diffY)
+  ) {
+    swiped = true;
+
+    if (diffX < 0) {
+      nextSpecial();
+    } else {
+      previousSpecial();
+    }
+  }
+}, { passive: true });
+
+stage.addEventListener("click", function() {
+  if (swiped) {
+    swiped = false;
+    return;
+  }
+
+  openPanel();
+});
 
 panelClose.addEventListener("click", closePanel);
+scrim.addEventListener("click", closePanel);
 
-document.addEventListener("keydown", (e) => {
+document.addEventListener("keydown", function(e) {
+  if (e.key === "ArrowRight") {
+    nextSpecial();
+  }
+
+  if (e.key === "ArrowLeft") {
+    previousSpecial();
+  }
 
   if (e.key === "Escape") {
     closePanel();
   }
-
 });
 
-setTimeout(() => {
-  document.querySelector(".hint")?.remove();
-}, 6000);
-
+renderSpecial();
 </script>
 
 </body>
