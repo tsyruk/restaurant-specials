@@ -1,310 +1,259 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Today's Specials</title>
 
 <style>
 html, body {
   margin: 0;
-  height: 100%;
-  background: #000;
-  overflow: hidden;
-  font-family: system-ui, -apple-system, sans-serif;
-}
-
-.stage {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  touch-action: pan-y;
-}
-
-.stage img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
+  overflow: hidden;
+  background: #000;
+  font-family: Arial, sans-serif;
+}
+
+#viewer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  touch-action: none;
+}
+
+#viewer img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
   user-select: none;
   -webkit-user-drag: none;
 }
 
-.counter {
+#details {
   position: fixed;
-  top: 14px;
-  right: 14px;
-  color: white;
-  background: rgba(0,0,0,.5);
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  z-index: 5;
-}
-
-.hint {
-  position: fixed;
-  bottom: 14px;
   left: 50%;
+  bottom: 30px;
   transform: translateX(-50%);
+  width: min(90%, 500px);
+  background: rgba(0,0,0,.78);
   color: white;
-  background: rgba(0,0,0,.5);
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 14px;
-  z-index: 5;
-  white-space: nowrap;
-}
-
-.panel {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: min(400px, 88vw);
-  background: #111;
-  color: #fff;
-  z-index: 10;
-  transform: translate(-50%, -50%) scale(.92);
-  opacity: 0;
-  pointer-events: none;
-  transition: .2s ease;
-  padding: 28px 26px;
+  padding: 18px 20px;
+  border-radius: 14px;
   box-sizing: border-box;
-  border-radius: 16px;
+  z-index: 10;
 }
 
-.panel.open {
-  transform: translate(-50%, -50%) scale(1);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.panel h2 {
+#details h2 {
   margin: 0 0 6px;
   font-size: 24px;
 }
 
-.price {
-  color: #f2b134;
-  font-weight: 600;
-  margin-bottom: 18px;
-}
-
-.desc,
-.allergens {
-  color: #ddd;
-  line-height: 1.5;
-  font-size: 16px;
-}
-
-.allergens {
-  margin-top: 16px;
-}
-
-.panel-close {
-  float: right;
-  border: none;
-  background: rgba(255,255,255,.08);
-  color: white;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+#price {
+  margin: 0 0 12px;
   font-size: 18px;
+  font-weight: bold;
+  color: #f2b134;
 }
 
-.scrim {
+#description {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+#allergens {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #ddd;
+}
+
+#counter {
   position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.4);
-  z-index: 9;
-  opacity: 0;
-  pointer-events: none;
+  top: 15px;
+  right: 15px;
+  z-index: 20;
+  color: white;
+  background: rgba(0,0,0,.6);
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 14px;
 }
 
-.scrim.open {
-  opacity: 1;
-  pointer-events: auto;
+.arrow {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  border: none;
+  background: rgba(0,0,0,.5);
+  color: white;
+  width: 48px;
+  height: 64px;
+  font-size: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#prev {
+  left: 10px;
+}
+
+#next {
+  right: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<button class="stage" id="stage">
-  <img id="special-image" src="special5.png" alt="Today's Specials">
-</button>
+<div id="viewer">
+  <img src="special5.png" alt="Today's Specials">
+</div>
 
-<div class="counter" id="counter">1 / 4</div>
-<div class="hint">Swipe left or right • Tap for details</div>
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
 
-<div class="scrim" id="scrim"></div>
+<div id="counter">1 / 4</div>
 
-<aside class="panel" id="panel">
-  <button class="panel-close" id="panelClose">×</button>
-
-  <h2 id="special-title"></h2>
-  <p id="special-price" class="price"></p>
-  <p id="special-desc" class="desc"></p>
-  <p id="special-allergens" class="allergens"></p>
-</aside>
+<div id="details">
+  <h2 id="title"></h2>
+  <p id="price"></p>
+  <p id="description"></p>
+  <p id="allergens"></p>
+</div>
 
 <script>
 const specials = [
   {
     title: "Fig & Ginger Mule",
-    price: "12",
-    image: "special5.png",
+    price: "$12",
     description:
       "Black Infusions fig vodka, lime, ginger beer.",
     allergens: ""
   },
   {
     title: "Baked Oysters",
-    price: "18",
-    image: "special5.png",
+    price: "$18",
     description:
       "Garlic herb butter, parmesan, crispy breadcrumbs, lemon.",
     allergens:
-      "Shellfish, dairy, gluten"
+      "Allergens: Shellfish, dairy, gluten"
   },
   {
     title: "Chilean Sea Bass",
-    price: "42",
-    image: "special5.png",
+    price: "$42",
     description:
       "Brown butter miso, roasted delicata squash, broccolini.",
     allergens:
-      "Fish, dairy"
+      "Allergens: Fish, dairy"
   },
   {
     title: "Chocolate Peanut Butter Tart",
-    price: "12",
-    image: "special5.png",
+    price: "$12",
     description:
       "Dark chocolate ganache, peanut butter mousse, peanut brittle crunch, sea salt.",
     allergens:
-      "Dairy, peanuts, gluten, egg"
+      "Allergens: Dairy, peanuts, gluten, egg"
   }
 ];
 
 let current = 0;
 
-const stage = document.getElementById("stage");
-const image = document.getElementById("special-image");
+const title = document.getElementById("title");
+const price = document.getElementById("price");
+const description = document.getElementById("description");
+const allergens = document.getElementById("allergens");
 const counter = document.getElementById("counter");
 
-const panel = document.getElementById("panel");
-const scrim = document.getElementById("scrim");
-const panelClose = document.getElementById("panelClose");
+function showPage() {
+  const special = specials[current];
 
-const title = document.getElementById("special-title");
-const price = document.getElementById("special-price");
-const desc = document.getElementById("special-desc");
-const allergens = document.getElementById("special-allergens");
-
-function renderSpecial() {
-  const s = specials[current];
-
-  image.src = s.image;
-  image.alt = s.title;
-
-  title.textContent = s.title;
-  price.textContent = "$" + s.price;
-  desc.textContent = s.description;
-
-  allergens.textContent =
-    s.allergens ? "Allergens: " + s.allergens : "";
+  title.textContent = special.title;
+  price.textContent = special.price;
+  description.textContent = special.description;
+  allergens.textContent = special.allergens;
 
   counter.textContent =
-    `${current + 1} / ${specials.length}`;
+    (current + 1) + " / " + specials.length;
 }
 
-function nextSpecial() {
+function nextPage() {
   current = (current + 1) % specials.length;
-  renderSpecial();
+  showPage();
 }
 
-function previousSpecial() {
+function previousPage() {
   current =
     (current - 1 + specials.length) % specials.length;
 
-  renderSpecial();
+  showPage();
 }
 
-function openPanel() {
-  renderSpecial();
-  panel.classList.add("open");
-  scrim.classList.add("open");
-}
+document
+  .getElementById("next")
+  .addEventListener("click", nextPage);
 
-function closePanel() {
-  panel.classList.remove("open");
-  scrim.classList.remove("open");
-}
+document
+  .getElementById("prev")
+  .addEventListener("click", previousPage);
+
+
+/* SWIPE */
 
 let startX = 0;
 let startY = 0;
-let swiped = false;
 
-stage.addEventListener("touchstart", function(e) {
-  const touch = e.changedTouches[0];
+const viewer = document.getElementById("viewer");
 
-  startX = touch.clientX;
-  startY = touch.clientY;
-  swiped = false;
+viewer.addEventListener("touchstart", function(e) {
+  startX = e.changedTouches[0].clientX;
+  startY = e.changedTouches[0].clientY;
 }, { passive: true });
 
-stage.addEventListener("touchend", function(e) {
-  const touch = e.changedTouches[0];
+viewer.addEventListener("touchend", function(e) {
 
-  const diffX = touch.clientX - startX;
-  const diffY = touch.clientY - startY;
+  const endX = e.changedTouches[0].clientX;
+  const endY = e.changedTouches[0].clientY;
+
+  const diffX = endX - startX;
+  const diffY = endY - startY;
 
   if (
-    Math.abs(diffX) > 50 &&
+    Math.abs(diffX) > 40 &&
     Math.abs(diffX) > Math.abs(diffY)
   ) {
-    swiped = true;
 
     if (diffX < 0) {
-      nextSpecial();
+      nextPage();
     } else {
-      previousSpecial();
+      previousPage();
     }
+
   }
+
 }, { passive: true });
 
-stage.addEventListener("click", function() {
-  if (swiped) {
-    swiped = false;
-    return;
-  }
 
-  openPanel();
-});
-
-panelClose.addEventListener("click", closePanel);
-scrim.addEventListener("click", closePanel);
+/* COMPUTER ARROW KEYS */
 
 document.addEventListener("keydown", function(e) {
+
   if (e.key === "ArrowRight") {
-    nextSpecial();
+    nextPage();
   }
 
   if (e.key === "ArrowLeft") {
-    previousSpecial();
+    previousPage();
   }
 
-  if (e.key === "Escape") {
-    closePanel();
-  }
 });
 
-renderSpecial();
+showPage();
 </script>
 
 </body>
